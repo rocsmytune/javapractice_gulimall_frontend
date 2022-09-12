@@ -2,13 +2,13 @@
  * @Author: rocs
  * @Date: 2022-09-12 19:48:45
  * @LastEditors: rocs
- * @LastEditTime: 2022-09-12 20:31:35
+ * @LastEditTime: 2022-09-12 21:52:57
  * @Description: 
 -->
 <!--  -->
 <template>
   <el-tree
-    :data="data"
+    :data="menus"
     :props="defaultProps"
     @node-click="handleNodeClick"
   ></el-tree>
@@ -28,10 +28,10 @@ export default {
 
   data() {
     return {
-      data: [],
+      menus: [],
       defaultProps: {
         children: "children",
-        label: "label",
+        label: "name"
       },
     };
   },
@@ -43,8 +43,9 @@ export default {
         this.$http({
           url: this.$http.adornUrl('/product/category/list/tree'),
           method: 'get'
-        }).then(data => {
-            console.log("get menus data success!!!!!")
+        }).then(({data}) => {
+            console.log("get menus data success!!!!!", data.data),
+            this.menus = data.page
         })
     }
   },
