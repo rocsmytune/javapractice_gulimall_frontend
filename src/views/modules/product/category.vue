@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2022-09-12 19:48:45
  * @LastEditors: rocs
- * @LastEditTime: 2022-09-12 21:52:57
+ * @LastEditTime: 2022-09-13 23:23:46
  * @Description: 
 -->
 <!--  -->
@@ -11,7 +11,33 @@
     :data="menus"
     :props="defaultProps"
     @node-click="handleNodeClick"
-  ></el-tree>
+    :expand-on-click-node="false"
+    show-checkbox
+    node-key="catId"
+    :default-expanded-keys="expandedKey"
+  >
+    <span class="custom-tree-node" slot-scope="{ node, data }">
+      <span>{{ node.label }}</span>
+      <span>
+        <el-button
+          v-if="node.level <= 2"
+          type="text"
+          size="mini"
+          @click="() => append(data)"
+        >
+          Append
+        </el-button>
+        <el-button
+          v-if="node.childNodes.length == 0"
+          type="text"
+          size="mini"
+          @click="() => remove(node, data)"
+        >
+          Delete
+        </el-button>
+      </span>
+    </span>
+  </el-tree>
 </template>
 
 <script>
@@ -28,26 +54,58 @@ export default {
 
   data() {
     return {
+      expandedKey: [],
       menus: [],
       defaultProps: {
         children: "children",
-        label: "name"
+        label: "name",
       },
     };
   },
   methods: {
+    getMenus() {
+      this.$http({
+        url: this.$http.adornUrl("/product/category/list/tree"),
+        method: "get",
+      }).then(({ data }) => {
+        console.log("get menus data success!!!!!", data.data),
+          (this.menus = data.page);
+      });
+    },
+
     handleNodeClick(data) {
       console.log(data);
     },
-    getMenus() {
+
+    append(data) {
+      console.log("append", data);
+    },
+
+    remove(node, data) {
+      var ids = [data.catId];
+      this.$confirm(`Do you want to delete menu: [${data.name}]?`, "Notice", {
+        confirmButtonText: "Yes",
+        cancelButtonText: "Cancel",
+        type: "warning",
+      }).then(() => {
         this.$http({
-          url: this.$http.adornUrl('/product/category/list/tree'),
-          method: 'get'
-        }).then(({data}) => {
-            console.log("get menus data success!!!!!", data.data),
-            this.menus = data.page
-        })
-    }
+        url: this.$http.adornUrl("/product/category/delete"),
+        method: "post",
+        data: this.$http.adornData(ids, false),
+      }).then(({ data }) => {
+        // console.log("####delete success...");
+        this.$message({
+          message: 'Menu delete success!',
+          type: 'success'
+        });
+        //refresh
+        this.getMenus();
+        //show default expanded menus
+        this.expandedKey = [node.parent.data.catId]
+      });
+    }).catch(() => {});
+      console.log("remove", node, data);
+    },
   },
 
   //生命周期 - 创建完成（可以访问当前this实例）
