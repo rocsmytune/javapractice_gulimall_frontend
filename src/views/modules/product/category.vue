@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2022-09-12 19:48:45
  * @LastEditors: rocs
- * @LastEditTime: 2022-10-03 16:51:14
+ * @LastEditTime: 2022-10-03 18:25:48
  * @Description: 
 -->
 <!--  -->
@@ -18,6 +18,7 @@
       :default-expanded-keys="expandedKey"
       draggable
       :allow-drop="allowDrop"
+      @node-drop="handleDrop"
     >
       <span class="custom-tree-node" slot-scope="{ node, data }">
         <span>{{ node.label }}</span>
@@ -71,22 +72,23 @@
 </template>
 
 <script>
-//这里可以导入其他文件（比如：组件，工具js，第三方插件js，json文件，图片文件等等）
-//例如：import 《组件名称》 from '《组件路径》';
+// 这里可以导入其他文件（比如：组件，工具js，第三方插件js，json文件，图片文件等等）
+// 例如：import 《组件名称》 from '《组件路径》';
 
 export default {
-  //import引入的组件需要注入到对象中才能使用
+  // import引入的组件需要注入到对象中才能使用
   components: {},
-  //监听属性 类似于data概念
+  // 监听属性 类似于data概念
   computed: {},
-  //监控data中的数据变化
+  // 监控data中的数据变化
   watch: {},
 
   data() {
     return {
+      updateNodes: [],
       maxLevel: 0,
       title: "",
-      dialogType: "", //edit add
+      dialogType: "", // edit add
       category: {
         name: "",
         parentCid: 0,
@@ -117,13 +119,76 @@ export default {
       });
     },
 
+    handleDrop(draggingNode, dropNode, dropType, ev) {
+      console.log("handleDrop", draggingNode, dropNode, dropType);
+      // 1.获取拖拽节点的父节点id
+      let pCid = 0;
+      let siblings = null;
+      if (dropType == "inner") {
+        pCid = dropNode.data.catId; 
+        siblings = dropNode.childNodes;
+      } else {
+        pCid = dropNode.parent.data.catId == undefined ? 0 : dropNode.parent.data.catId;
+        siblings = dropNode.parent.childNodes;
+      }
+
+      // 2.获取当前拖拽节点的最新顺序
+      for(let i = 0; i < siblings.length; i++){
+        if(siblings[i].data.catId == draggingNode.data.catId){
+          // if the node being traversed is the currently dragging node
+          let catLevel = draggingNode.level;
+          if(siblings[i].level != draggingNode.level){
+            // current node level changed
+            catLevel = siblings[i].level;
+            // modify the level of the current node and its children
+            this.updateChildNodeLevel(siblings[i]);
+
+          }
+          this.updateNodes.push({catId:siblings[i].data.catId, sort:i, parentCid: pCid, catLevel: catLevel});
+        } else {
+          this.updateNodes.push({catId:siblings[i].data.catId, sort:i});
+        }
+      }
+
+      console.log("updateNodes", this.updateNodes);
+      
+      // 3.获取当前拖拽节点的最新层级
+      this.$http({
+        url: this.$http.adornUrl("/product/category/update/sort"),
+        method: "post",
+        data: this.$http.adornData(this.updateNodes, false),
+      }).then(({ data }) => {
+        this.$message({
+          message: "update sort success!",
+          type: "success"
+        });
+
+        this.updateNodes = [];
+        this.maxLevel = 0;
+        this.getMenus();
+        this.expandedKey = [pCid];
+      });
+
+
+    },
+
+    updateChildNodeLevel(node) {
+      if (node.childNodes.length > 0) {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          var cNode = node.childNodes[i].data;
+          this.updateNodes.push({ catId: cNode.catId, catLevel: node.childNodes[i].level});
+          this.updateChildNodeLevel(node.childNodes[i]);
+        }
+      }
+    },
+
     handleNodeClick(data) {
       console.log(data);
     },
 
-    //judge if the node can be dropped: no more than 3 levels
+    // judge if the node can be dropped: no more than 3 levels
     allowDrop(draggingNode, dropNode, type) {
-      //check current node overall levels
+      // check current node overall levels
       console.log("allowDrop", draggingNode, dropNode, type);
       this.countNodeLevel(draggingNode.data);
       console.log("当前节点深度maxLevel", this.maxLevel);
@@ -139,7 +204,7 @@ export default {
     },
 
     countNodeLevel(node) {
-      //find all children and get maxLevel
+      // find all children and get maxLevel
       if(node.children != null && node.children.length > 0){
         for(let i = 0; i < node.children.length; i++) {
           if(node.children[i].catLevel > this.maxLevel) {
@@ -152,7 +217,7 @@ export default {
       }
     },
 
-    //add edit button
+    // add edit button
     edit(data) {
       console.log("要修改的数据", data);
 
@@ -162,7 +227,7 @@ export default {
 
       this.dialogVisible = true;
 
-      //send request and get the current category data
+      // send request and get the current category data
       this.$http({
         url: this.$http.adornUrl(`/product/category/info/${data.catId}`),
         method: "get",
@@ -219,7 +284,7 @@ export default {
     },
 
 
-    //add category
+    // add category
     addCategory() {
       var { parentCid, name, icon, productUnit, catLevel, showStatus, sort } =
         this.category;
@@ -257,11 +322,11 @@ export default {
           message: "Menu saved successfully",
           type: "success",
         });
-        //close dialog
+        // close dialog
         this.dialogVisible = false;
-        //refresh menu
+        // refresh menu
         this.getMenus();
-        //expand menu
+        // expand menu
         this.expandedKey.push(this.category.parentCid);
       });
     },
@@ -293,9 +358,9 @@ export default {
               message: "Menu delete success!",
               type: "success",
             });
-            //refresh
+            // refresh
             this.getMenus();
-            //show default expanded menus
+            // show default expanded menus
             this.expandedKey = [node.parent.data.catId];
           });
         })
@@ -304,19 +369,19 @@ export default {
     },
   },
 
-  //生命周期 - 创建完成（可以访问当前this实例）
+  // 生命周期 - 创建完成（可以访问当前this实例）
   created() {
     this.getMenus();
   },
-  //生命周期 - 挂载完成（可以访问DOM元素）
+  // 生命周期 - 挂载完成（可以访问DOM元素）
   mounted() {},
-  beforeCreate() {}, //生命周期 - 创建之前
-  beforeMount() {}, //生命周期 - 挂载之前
-  beforeUpdate() {}, //生命周期 - 更新之前
-  updated() {}, //生命周期 - 更新之后
-  beforeDestroy() {}, //生命周期 - 销毁之前
-  destroyed() {}, //生命周期 - 销毁完成
-  activated() {}, //如果页面有keep-alive缓存功能，这个函数会触发
+  beforeCreate() {}, // 生命周期 - 创建之前
+  beforeMount() {}, // 生命周期 - 挂载之前
+  beforeUpdate() {}, // 生命周期 - 更新之前
+  updated() {}, // 生命周期 - 更新之后
+  beforeDestroy() {}, // 生命周期 - 销毁之前
+  destroyed() {}, // 生命周期 - 销毁完成
+  activated() {}, // 如果页面有keep-alive缓存功能，这个函数会触发
 };
 </script>
 <style scoped>
