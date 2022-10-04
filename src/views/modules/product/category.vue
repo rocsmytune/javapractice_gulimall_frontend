@@ -2,12 +2,19 @@
  * @Author: rocs
  * @Date: 2022-09-12 19:48:45
  * @LastEditors: rocs
- * @LastEditTime: 2022-10-03 18:25:48
+ * @LastEditTime: 2022-10-04 18:18:46
  * @Description: 
 -->
 <!--  -->
 <template>
   <div>
+    <el-switch
+      v-model="draggable"
+      active-text="enable dragging"
+      inactive-text="unable dragging"
+    ></el-switch>
+    <el-button v-if="draggable" @click="batchSave">batch save</el-button>
+    <el-button type="danger" @click="batchDelete">batch delete</el-button>
     <el-tree
       :data="menus"
       :props="defaultProps"
@@ -16,9 +23,10 @@
       show-checkbox
       node-key="catId"
       :default-expanded-keys="expandedKey"
-      draggable
+      :draggable="draggable"
       :allow-drop="allowDrop"
       @node-drop="handleDrop"
+      ref="menuTree"
     >
       <span class="custom-tree-node" slot-scope="{ node, data }">
         <span>{{ node.label }}</span>
@@ -60,7 +68,10 @@
           <el-input v-model="category.icon" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="product unit">
-          <el-input v-model="category.productUnit" autocomplete="off"></el-input>
+          <el-input
+            v-model="category.productUnit"
+            autocomplete="off"
+          ></el-input>
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -85,6 +96,8 @@ export default {
 
   data() {
     return {
+      pCid: [],
+      draggable: false,
       updateNodes: [],
       maxLevel: 0,
       title: "",
@@ -119,40 +132,33 @@ export default {
       });
     },
 
-    handleDrop(draggingNode, dropNode, dropType, ev) {
-      console.log("handleDrop", draggingNode, dropNode, dropType);
-      // 1.获取拖拽节点的父节点id
-      let pCid = 0;
-      let siblings = null;
-      if (dropType == "inner") {
-        pCid = dropNode.data.catId; 
-        siblings = dropNode.childNodes;
-      } else {
-        pCid = dropNode.parent.data.catId == undefined ? 0 : dropNode.parent.data.catId;
-        siblings = dropNode.parent.childNodes;
+    batchDelete() {
+      let catIds = [];
+      let checkedNodes = this.$refs.menuTree.getCheckedNodes();
+      console.log("被选中的元素", checkedNodes);
+      for (let i = 0; i < checkedNodes.length; i++) {
+        catIds.push(checkedNodes[i].catId);
       }
+      this.$confirm(`Do you want to delete menus: [${catIds}]?`, "Notice", {
+        confirmButtonText: "Yes",
+        cancelButtonText: "Cancel",
+        type: "warning",
+      }).then(() => {
+        this.$http({
+          url: this.$http.adornUrl("/product/category/delete"),
+          method: "post",
+          data: this.$http.adornData(catIds, false),
+        }).then(({ data }) => {
+            this.$message({
+              message: "batch delete success",
+              type: "success"
+            });
+            this.getMenus();
+          });
+       }).catch(() => {});
+    },
 
-      // 2.获取当前拖拽节点的最新顺序
-      for(let i = 0; i < siblings.length; i++){
-        if(siblings[i].data.catId == draggingNode.data.catId){
-          // if the node being traversed is the currently dragging node
-          let catLevel = draggingNode.level;
-          if(siblings[i].level != draggingNode.level){
-            // current node level changed
-            catLevel = siblings[i].level;
-            // modify the level of the current node and its children
-            this.updateChildNodeLevel(siblings[i]);
-
-          }
-          this.updateNodes.push({catId:siblings[i].data.catId, sort:i, parentCid: pCid, catLevel: catLevel});
-        } else {
-          this.updateNodes.push({catId:siblings[i].data.catId, sort:i});
-        }
-      }
-
-      console.log("updateNodes", this.updateNodes);
-      
-      // 3.获取当前拖拽节点的最新层级
+    batchSave() {
       this.$http({
         url: this.$http.adornUrl("/product/category/update/sort"),
         method: "post",
@@ -160,23 +166,68 @@ export default {
       }).then(({ data }) => {
         this.$message({
           message: "update sort success!",
-          type: "success"
+          type: "success",
         });
 
         this.updateNodes = [];
         this.maxLevel = 0;
         this.getMenus();
-        this.expandedKey = [pCid];
+        this.expandedKey = this.pCid;
+        // this.pCid = 0;
       });
+    },
 
+    handleDrop(draggingNode, dropNode, dropType, ev) {
+      console.log("handleDrop", draggingNode, dropNode, dropType);
+      // 1.获取拖拽节点的父节点id
+      let pCid = 0;
+      let siblings = null;
+      if (dropType == "inner") {
+        pCid = dropNode.data.catId;
+        siblings = dropNode.childNodes;
+      } else {
+        pCid =
+          dropNode.parent.data.catId == undefined
+            ? 0
+            : dropNode.parent.data.catId;
+        siblings = dropNode.parent.childNodes;
+      }
+      this.pCid.push(pCid);
+      // 2.获取当前拖拽节点的最新顺序
+      for (let i = 0; i < siblings.length; i++) {
+        if (siblings[i].data.catId == draggingNode.data.catId) {
+          // if the node being traversed is the currently dragging node
+          let catLevel = draggingNode.level;
+          if (siblings[i].level != draggingNode.level) {
+            // current node level changed
+            catLevel = siblings[i].level;
+            // modify the level of the current node and its children
+            this.updateChildNodeLevel(siblings[i]);
+          }
+          this.updateNodes.push({
+            catId: siblings[i].data.catId,
+            sort: i,
+            parentCid: pCid,
+            catLevel: catLevel,
+          });
+        } else {
+          this.updateNodes.push({ catId: siblings[i].data.catId, sort: i });
+        }
+      }
 
+      console.log("updateNodes", this.updateNodes);
+
+      // 3.获取当前拖拽节点的最新层级
     },
 
     updateChildNodeLevel(node) {
       if (node.childNodes.length > 0) {
         for (let i = 0; i < node.childNodes.length; i++) {
           var cNode = node.childNodes[i].data;
-          this.updateNodes.push({ catId: cNode.catId, catLevel: node.childNodes[i].level});
+          this.updateNodes.push({
+            catId: cNode.catId,
+            catLevel: node.childNodes[i].level,
+          });
           this.updateChildNodeLevel(node.childNodes[i]);
         }
       }
@@ -190,30 +241,26 @@ export default {
     allowDrop(draggingNode, dropNode, type) {
       // check current node overall levels
       console.log("allowDrop", draggingNode, dropNode, type);
-      this.countNodeLevel(draggingNode.data);
+      this.countNodeLevel(draggingNode);
       console.log("当前节点深度maxLevel", this.maxLevel);
-      let deep = this.maxLevel - draggingNode.data.catLevel + 1
+      let deep = Math.abs(this.maxLevel - draggingNode.level + 1);
 
-      if(type == 'inner'){
-        deep = deep + dropNode.level;
+      if (type == "inner") {
+        return deep + dropNode.level <= 3;
       } else {
-        deep = deep + dropNode.parent.level;
+        return deep + dropNode.parent.level <= 3;
       }
-
-      return deep <= 3;
     },
 
     countNodeLevel(node) {
       // find all children and get maxLevel
-      if(node.children != null && node.children.length > 0){
-        for(let i = 0; i < node.children.length; i++) {
-          if(node.children[i].catLevel > this.maxLevel) {
-            this.maxLevel = node.children[i].catLevel;
+      if (node.childrenNodes != null && node.childNodes.length > 0) {
+        for (let i = 0; i < node.childrenNodes.length; i++) {
+          if (node.childrenNodes[i].level > this.maxLevel) {
+            this.maxLevel = node.childrenNodes[i].level;
           }
-          this.countNodeLevel(node.children[i]);
+          this.countNodeLevel(node.childrenNodes[i]);
         }
-      } else {
-        this.maxLevel = node.catLevel;
       }
     },
 
@@ -282,7 +329,6 @@ export default {
         this.expandedKey = [this.category.parentCid];
       });
     },
-
 
     // add category
     addCategory() {
