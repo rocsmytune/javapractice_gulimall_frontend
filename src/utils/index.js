@@ -1,3 +1,10 @@
+/*
+ * @Author: rocs
+ * @Date: 2022-08-27 14:34:32
+ * @LastEditors: rocs
+ * @LastEditTime: 2023-02-14 01:16:58
+ * @Description: temporary change isAuth defintion to 'true'
+ */
 import Vue from 'vue'
 import router from '@/router'
 import store from '@/store'
@@ -16,7 +23,8 @@ export function getUUID () {
  * @param {*} key
  */
 export function isAuth (key) {
-  return JSON.parse(sessionStorage.getItem('permissions') || '[]').indexOf(key) !== -1 || false
+  // return JSON.parse(sessionStorage.getItem('permissions') || '[]').indexOf(key) !== -1 || false
+  return true
 }
 
 /**
