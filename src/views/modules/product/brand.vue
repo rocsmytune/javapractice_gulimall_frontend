@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2023-02-14 01:01:28
  * @LastEditors: rocs
- * @LastEditTime: 2023-02-14 01:54:49
+ * @LastEditTime: 2023-02-16 01:57:50
  * @Description: brand management main page
 -->
 <template>
@@ -70,6 +70,14 @@
         align="center"
         label="品牌logo地址"
       >
+      <template slot-scope="scope">
+        <!-- <el-image
+          style="width: 100px; height: auto"
+          :src="scope.row.logo"
+          fit="fill"
+        ></el-image> -->
+        <img :src="scope.row.logo" style="width: 100px; height: auto" />
+      </template>
       </el-table-column>
       <el-table-column
         prop="descript"
