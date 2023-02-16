@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2023-02-14 01:01:28
  * @LastEditors: rocs
- * @LastEditTime: 2023-02-16 01:57:50
+ * @LastEditTime: 2023-02-16 23:49:24
  * @Description: brand management main page
 -->
 <template>
@@ -99,7 +99,7 @@
             inactive-color="#808080"
             :active-value="1"
             :inactive-value="0"
-            @change="updateShowStatus(scope.row)"
+            @change="updateBrandStatus(scope.row)"
           ></el-switch>
         </template>
       </el-table-column>
@@ -208,12 +208,12 @@ export default {
       });
     },
     // 修改显示状态
-    updateShowStatus(data) {
+    updateBrandStatus(data) {
       console.log("最新状态",data);
       let {brandId,showStatus} = data;
       //发送请求修改状态
       this.$http({
-        url: this.$http.adornUrl("/product/brand/update"),
+        url: this.$http.adornUrl("/product/brand/update/status"),
         method: "post",
         data: this.$http.adornData({brandId, showStatus}, data),
       }).then(({ data }) => {

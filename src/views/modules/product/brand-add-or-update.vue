@@ -15,13 +15,13 @@
       <el-input v-model="dataForm.descript" placeholder="介绍"></el-input>
     </el-form-item>
     <el-form-item label="显示状态" prop="showStatus">
-      <el-switch v-model="dataForm.showStatus" active-value="1" inactive-value="0"></el-switch>
+      <el-switch v-model="dataForm.showStatus" :active-value="1" :inactive-value="0"></el-switch>
     </el-form-item>
     <el-form-item label="检索首字母" prop="firstLetter">
       <el-input v-model="dataForm.firstLetter" placeholder="检索首字母"></el-input>
     </el-form-item>
     <el-form-item label="排序" prop="sort">
-      <el-input v-model="dataForm.sort" placeholder="排序"></el-input>
+      <el-input v-model.number="dataForm.sort" placeholder="排序"></el-input>
     </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
@@ -64,7 +64,7 @@ import SingleUpload from "@/components/upload/singleUpload"
           ],
           firstLetter: [
             { validator: (rule, value, callback)=>{
-              if (!value) {
+              if (value == '') {
                 callback(new Error('检索首字母不能为空'))
               } else if (/^[a-zA-Z]$/.test(value) === false) {
                 callback(new Error('首字母必须是A-Z或a-z'))
@@ -77,12 +77,10 @@ import SingleUpload from "@/components/upload/singleUpload"
           ],
           sort: [
             { validator: (rule, value, callback) => {
-              if (!value) {
+              if (value === "") {
                 callback(new Error('排序不能为空'))
-              } else if (!Number.isInteger(value)){
-                callback(new Error('排序必须是整数'))
-              } else if (value < 0) {
-                callback(new Error('排序不能小于0'))
+              } else if (!Number.isInteger(value) || value < 0){
+                callback(new Error('排序必须是一个大于等于0的整数'))
               } else {
                 callback()
               }
