@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2023-02-22 23:48:18
  * @LastEditors: rocs
- * @LastEditTime: 2023-02-22 23:48:19
+ * @LastEditTime: 2023-03-07 02:01:10
  * @Description: 
 -->
 <template>
@@ -31,11 +31,12 @@
       <el-form-item label="组图标" prop="icon">
         <el-input v-model="dataForm.icon" placeholder="组图标"></el-input>
       </el-form-item>
-      <el-form-item label="所属分类" prop="catelogId">
-        <!-- <el-input v-model="dataForm.catelogId" placeholder="所属分类id"></el-input> @change="handleChange" -->
-        <!-- <el-cascader filterable placeholder="试试搜索：手机" v-model="catelogPath" :options="categorys"  :props="props"></el-cascader> -->
-        <!-- :catelogPath="catelogPath"自定义绑定的属性，可以给子组件传值 -->
-        <category-cascader :catelogPath.sync="catelogPath"></category-cascader>
+      <el-form-item label="所属分类id" prop="catelogId">
+        <!-- <el-input v-model="dataForm.catelogId" placeholder="所属分类id"></el-input> @change="handleChange"
+        <el-cascader filterable placeholder="试试搜索：手机" v-model="catelogPath" :options="categorys"  :props="props"></el-cascader>
+        :catelogPath="catelogPath"自定义绑定的属性，可以给子组件传值 -->
+        <el-cascader filterable placeholder="试试搜索：手机" v-model="dataForm.catelogPath" :options="categorys" :props="props"></el-cascader>
+        <!-- <category-cascader :catelogPath.sync="dataForm.catelogPath"></category-cascader> -->
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
@@ -57,13 +58,13 @@ export default {
       },
       visible: false,
       categorys: [],
-      catelogPath: [],
       dataForm: {
         attrGroupId: 0,
         attrGroupName: "",
         sort: "",
         descript: "",
         icon: "",
+        catelogPath: [],
         catelogId: 0
       },
       dataRule: {
@@ -85,14 +86,14 @@ export default {
   
   methods: {
     dialogClose(){
-      this.catelogPath = [];
+      this.dataForm.catelogPath = [];
     },
     getCategorys(){
       this.$http({
         url: this.$http.adornUrl("/product/category/list/tree"),
         method: "get"
       }).then(({ data }) => {
-        this.categorys = data.data;
+        this.categorys = data.page;
       });
     },
     init(id) {
@@ -115,7 +116,7 @@ export default {
               this.dataForm.icon = data.attrGroup.icon;
               this.dataForm.catelogId = data.attrGroup.catelogId;
               //查出catelogId的完整路径
-              this.catelogPath =  data.attrGroup.catelogPath;
+              this.dataForm.catelogPath =  data.attrGroup.catelogPath;
             }
           });
         }
@@ -138,7 +139,7 @@ export default {
               sort: this.dataForm.sort,
               descript: this.dataForm.descript,
               icon: this.dataForm.icon,
-              catelogId: this.catelogPath[this.catelogPath.length-1]
+              catelogId: this.dataForm.catelogPath[this.dataForm.catelogPath.length-1]
             })
           }).then(({ data }) => {
             if (data && data.code === 0) {
