@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2023-02-22 23:48:39
  * @LastEditors: rocs
- * @LastEditTime: 2023-02-22 23:48:39
+ * @LastEditTime: 2023-03-10 22:23:36
  * @Description: 
 -->
 <template>
@@ -89,7 +89,7 @@ export default {
         url: this.$http.adornUrl(`/product/attr/base/listforspu/${this.spuId}`),
         method: "get"
       }).then(({ data }) => {
-        data.data.forEach(item => {
+        data.page.forEach(item => {
           this.spuAttrsMap["" + item.attrId] = item;
         });
         console.log("~~~~", this.spuAttrsMap);
@@ -110,7 +110,7 @@ export default {
         params: this.$http.adornParams({})
       }).then(({ data }) => {
         //先对表单的baseAttrs进行初始化
-        data.data.forEach(item => {
+        data.page.forEach(item => {
           let attrArray = [];
           item.attrs.forEach(attr => {
             let v = "";
@@ -131,7 +131,7 @@ export default {
           });
           this.dataResp.baseAttrs.push(attrArray);
         });
-        this.dataResp.attrGroups = data.data;
+        this.dataResp.attrGroups = data.page;
       });
     },
     submitSpuAttrs() {

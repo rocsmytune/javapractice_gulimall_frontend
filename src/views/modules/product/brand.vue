@@ -168,7 +168,7 @@ export default {
           brandId: this.brandId
         })
       }).then(({ data }) => {
-        this.cateRelationTableData = data.data;
+        this.cateRelationTableData = data.page;
       });
     },
     // 获取数据列表
@@ -184,8 +184,8 @@ export default {
         })
       }).then(({ data }) => {
         if (data && data.code === 0) {
-          this.dataList = data.data.list;
-          this.totalPage = data.data.totalCount;
+          this.dataList = data.page.list;
+          this.totalPage = data.page.totalCount;
         } else {
           this.dataList = [];
           this.totalPage = 0;

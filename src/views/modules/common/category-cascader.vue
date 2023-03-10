@@ -1,3 +1,10 @@
+<!--
+ * @Author: rocs
+ * @Date: 2023-02-22 23:45:30
+ * @LastEditors: rocs
+ * @LastEditTime: 2023-03-10 22:39:37
+ * @Description: 
+-->
 <template>
 <!-- 
 使用说明：
@@ -64,7 +71,7 @@ export default {
         url: this.$http.adornUrl("/product/category/list/tree"),
         method: "get"
       }).then(({ data }) => {
-        this.categorys = data.data;
+        this.categorys = data.page;
       });
     }
   },

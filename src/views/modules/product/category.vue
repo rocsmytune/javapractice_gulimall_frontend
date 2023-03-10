@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2022-09-12 19:48:45
  * @LastEditors: rocs
- * @LastEditTime: 2023-03-07 02:17:33
+ * @LastEditTime: 2023-03-10 22:46:56
  * @Description: 
 -->
 <!--  -->
@@ -115,7 +115,7 @@ export default {
         url: this.$http.adornUrl("/product/category/list/tree"),
         method: "get"
       }).then(({ data }) => {
-        console.log("成功获取到菜单数据...", data.data);
+        console.log("成功获取到菜单数据...", data.page);
         this.menus = data.page;
       });
     },
