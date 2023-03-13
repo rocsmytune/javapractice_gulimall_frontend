@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2023-02-22 23:48:10
  * @LastEditors: rocs
- * @LastEditTime: 2023-03-10 22:23:22
+ * @LastEditTime: 2023-03-13 17:40:13
  * @Description: 
 -->
 <template>
@@ -200,7 +200,7 @@ export default {
         method: "get",
         params: this.$http.adornParams({})
       }).then(({ data }) => {
-        this.relationAttrs = data.page;
+        this.relationAttrs = data.data;
       });
     },
     dialogClose() {},
