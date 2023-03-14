@@ -1,3 +1,10 @@
+/*
+ * @Author: rocs
+ * @Date: 2022-08-27 14:34:32
+ * @LastEditors: rocs
+ * @LastEditTime: 2023-03-14 21:41:58
+ * @Description: 
+ */
 import Vue from 'vue'
 import App from '@/App'
 import router from '@/router'                 // api: https://github.com/vuejs/vue-router
@@ -10,6 +17,8 @@ import '@/assets/scss/index.scss'
 import httpRequest from '@/utils/httpRequest' // api: https://github.com/axios/axios
 import { isAuth } from '@/utils'
 import cloneDeep from 'lodash/cloneDeep'
+import PubSub from 'pubsub-js'
+Vue.prototype.PubSub = PubSub
 
 Vue.use(VueCookie)
 Vue.config.productionTip = false

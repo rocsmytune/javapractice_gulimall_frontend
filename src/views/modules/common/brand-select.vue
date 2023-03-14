@@ -2,7 +2,7 @@
  * @Author: rocs
  * @Date: 2023-02-22 23:45:30
  * @LastEditors: rocs
- * @LastEditTime: 2023-03-10 22:41:26
+ * @LastEditTime: 2023-03-14 22:10:34
  * @Description: 
 -->
 <template>
@@ -58,7 +58,7 @@ export default {
           catId: this.catId
         })
       }).then(({ data }) => {
-        this.brands = data.page;
+        this.brands = data.data;
       });
     }
   },
